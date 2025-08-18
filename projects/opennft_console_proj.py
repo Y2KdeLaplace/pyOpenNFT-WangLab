@@ -296,7 +296,11 @@ class OpenNFTCoreProj(mp.Process):
             # t1
             # Volume acquisition
             self.recorder.record_event(erd.Times.t1, self.iteration.iter_number + 1, time.time())
-            self.iteration.load_vol(vol_filename, "dcm")
+
+            if str(vol_filename).endswith(".nii") or str(vol_filename).endswith(".nii.gz"):
+                self.iteration.load_vol(vol_filename, "nii")
+            else:
+                self.iteration.load_vol(vol_filename, "dcm")
 
             self.iteration.pre_iter = self.iteration.iter_number
 

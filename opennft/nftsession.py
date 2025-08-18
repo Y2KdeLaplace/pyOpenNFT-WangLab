@@ -274,9 +274,10 @@ class NftIteration:
     def load_vol(self, file_name, im_type):
 
         self.mr_vol.load_vol(file_name, im_type)
-        self.mr_vol.volume = np.array(img2d_vol3d(self.mr_vol.volume, self.session.xdim_img_count,
-                                                  self.session.ydim_img_count, self.session.reference_vol.dim),
-                                      order='F')
+        if len(self.mr_vol.volume.shape) == 2:
+            self.mr_vol.volume = np.array(img2d_vol3d(self.mr_vol.volume, self.session.xdim_img_count,
+                                                      self.session.ydim_img_count, self.session.reference_vol.dim),
+                                          order='F')
 
     # --------------------------------------------------------------------------
     def process_vol(self):
