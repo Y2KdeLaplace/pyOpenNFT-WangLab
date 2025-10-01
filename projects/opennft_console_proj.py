@@ -74,7 +74,7 @@ class OpenNFTCoreProj(mp.Process):
         # setup mr_reference for session
         # In auto_rtqa mode different cases are considered
         if not con.auto_rtqa:
-            session.setup(config.mc_template_file)
+            session.setup(self.exchange_data['MCTempl'])
             session.select_rois()
             session.wb_roi_init()
 

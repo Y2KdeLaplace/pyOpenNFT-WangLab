@@ -15,7 +15,6 @@ from PyQt6.QtGui import QPalette, QIcon, QRegularExpressionValidator
 from PyQt6.uic import loadUi
 from PyQt6.QtCore import QTimer, QSettings, QRegularExpression
 from PyQt6.QtWidgets import QApplication, QWidget, QFileDialog, QMenu
-from PyQt6.QtCore import QObject, QThread, pyqtSignal
 from loguru import logger
 from rest_interface import RestWorker
 
@@ -304,6 +303,7 @@ class OpenNFTManager(QWidget):
         self.exchange_data["flags_planes"] = projview.ProjectionType.coronal.value
         self.exchange_data['close_udp'] = False
         self.exchange_data['dvars_scale'] = con.default_dvars_threshold
+        self.exchange_data['MCTempl'] = ''
 
     # --------------------------------------------------------------------------
     # Shared memory buffers initialization for large data exchange between processes
@@ -1292,24 +1292,19 @@ class OpenNFTManager(QWidget):
     def on_choose_set_file(self):
         if con.donot_use_qfile_native_dialog:
             fname = QFileDialog.getOpenFileName(
-                self, "Select 'SET File'", str(self.setting_file_name), 'ini files (*.ini)',
+                self, "Select 'SET File'", str(self.leWorkFolder), 'ini files (*.ini)',
                 options=QFileDialog.DontUseNativeDialog)[0]
         else:
             fname = QFileDialog.getOpenFileName(
-                self, "Select 'SET File'", str(self.setting_file_name), 'ini files (*.ini)')[0]
+                self, "Select 'SET File'", str(self.leWorkFolder), 'ini files (*.ini)')[0]
 
         fname = str(Path(fname))
         self.choose_set_file(fname)
 
     # --------------------------------------------------------------------------
     def on_choose_weights_file(self):
-        if con.donot_use_qfile_native_dialog:
-            fname = QFileDialog.getOpenFileName(
-                self, "Select 'Weights File'", self.leWeightsFile.text(), 'all files (*.*)',
-                options=QFileDialog.DontUseNativeDialog)[0]
-        else:
-            fname = QFileDialog.getOpenFileName(
-                self, "Select 'Weights File'", self.leWeightsFile.text(), 'all files (*.*)')[0]
+        fname = QFileDialog.getExistingDirectory(
+            self, "Select 'Weights File'", directory=str(self.leWorkFolder))
 
         fname = str(Path(fname))
         self.choose_weights_file(fname)
@@ -1317,9 +1312,6 @@ class OpenNFTManager(QWidget):
     # --------------------------------------------------------------------------
     def choose_weights_file(self, fname):
         if not fname:
-            return
-
-        if not Path(fname).is_file():
             return
 
         self.leWeightsFile.setText(fname)
@@ -1330,10 +1322,10 @@ class OpenNFTManager(QWidget):
         fname = self.leProtocolFile.text()
         if con.donot_use_qfile_native_dialog:
             fname = QFileDialog.getOpenFileName(
-                self, "Select Protocol File", fname, 'JPRT files (*.*)', options=QFileDialog.DontUseNativeDialog)[0]
+                self, "Select Protocol File", str(self.leWorkFolder), 'JPRT files (*.*)', options=QFileDialog.DontUseNativeDialog)[0]
         else:
             fname = QFileDialog.getOpenFileName(
-                self, "Select Protocol File", fname, 'JPRT files (*.*)')[0]
+                self, "Select Protocol File", str(self.leWorkFolder), 'JPRT files (*.*)')[0]
 
         fname = str(Path(fname))
         if fname:
@@ -1344,11 +1336,11 @@ class OpenNFTManager(QWidget):
     def on_choose_struct_bg_file(self):
         if con.donot_use_qfile_native_dialog:
             fname = QFileDialog.getOpenFileName(
-                self, "Select Structural File", str(config.ROOT_PATH), 'Template files (*.nii)',
+                self, "Select Structural File", str(self.leWorkFolder), 'Template files (*.nii)',
                 options=QFileDialog.DontUseNativeDialog)[0]
         else:
             fname = QFileDialog.getOpenFileName(
-                self, "Select Structural File", str(config.ROOT_PATH), 'Template files (*.nii)')[0]
+                self, "Select Structural File", str(self.leWorkFolder), 'Template files (*.nii)')[0]
 
         fname = str(Path(fname))
         if fname:
@@ -1359,11 +1351,11 @@ class OpenNFTManager(QWidget):
     def on_choose_mc_templ_file(self):
         if con.donot_use_qfile_native_dialog:
             fname = QFileDialog.getOpenFileName(
-                self, "Select MCTempl File", str(config.ROOT_PATH), 'Template files (*.nii)',
+                self, "Select MCTempl File", str(self.leWorkFolder), 'Template files (*.nii)',
                 options=QFileDialog.DontUseNativeDialog)[0]
         else:
             fname = QFileDialog.getOpenFileName(
-                self, "Select MCTempl File", str(config.ROOT_PATH), 'Template files (*.nii)')[0]
+                self, "Select MCTempl File", str(self.leWorkFolder), 'Template files (*.nii)')[0]
 
         fname = str(Path(fname))
         if fname:
@@ -1371,7 +1363,7 @@ class OpenNFTManager(QWidget):
                 self.leMCTempl3.setText(fname)
             else:
                 self.leMCTempl.setText(fname)
-            # self.P['MCTempl'] = fname
+            self.exchange_data['MCTempl'] = fname
 
     # --------------------------------------------------------------------------
     def on_choose_folder(self, name, le):
@@ -1386,11 +1378,11 @@ class OpenNFTManager(QWidget):
     def on_choose_file(self, name, le):
         if con.donot_use_qfile_native_dialog:
             fname = QFileDialog.getOpenFileName(
-                self, "Select '{}' directory".format(name), str(config.ROOT_PATH), 'Any file (*.*)',
+                self, "Select '{}' directory".format(name), str(self.leWorkFolder), 'Any file (*.*)',
                 options=QFileDialog.DontUseNativeDialog)[0]
         else:
             fname = QFileDialog.getOpenFileName(
-                self, "Select '{}' directory".format(name), str(config.ROOT_PATH), 'Any file (*.*)')[0]
+                self, "Select '{}' directory".format(name), str(self.leWorkFolder), 'Any file (*.*)')[0]
 
         fname = str(Path(fname))
         if fname:
