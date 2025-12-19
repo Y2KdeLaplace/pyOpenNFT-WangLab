@@ -1167,7 +1167,8 @@ class OpenNFTManager(QWidget):
 
     # --------------------------------------------------------------------------
     def start(self):
-        self.rest_timer.start(int(self.config.rest_time_interval * 1000))
+        if self.config.rest_time_interval is not None:
+            self.rest_timer.start(int(self.config.rest_time_interval * 1000))
         if con.auto_rtqa:
             self.setup()
 
