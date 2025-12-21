@@ -856,7 +856,7 @@ class OpenNFTManager(QWidget):
 
         self.draw_mc_plots.__dict__['mctrrot'] = plots
 
-        x = np.array(self.exchange_data['scan_time_marks']) - self.exchange_data['zero_time']
+        x = np.arange(1,self.exchange_data["iter_norm_number"]+1)
 
         for pt, i1, in zip(
                 self.draw_mc_plots.__dict__['mctrrot'], range(0, 6)):
@@ -908,7 +908,7 @@ class OpenNFTManager(QWidget):
 
             self.draw_given_roi_plot.__dict__[plotitem] = plots, muster
 
-        x = np.array(self.exchange_data['scan_time_marks']) - self.exchange_data['zero_time']
+        x = np.arange(1,self.exchange_data["iter_norm_number"]+1)
 
         for p, y in zip(self.draw_given_roi_plot.__dict__[plotitem][0], data):
             if len(x) != len(y):
@@ -979,7 +979,7 @@ class OpenNFTManager(QWidget):
             self.draw_min_max_mroc_roi_plot.__dict__['posMin'] = plotsMin
             self.draw_min_max_mroc_roi_plot.__dict__['posMax'] = plotsMax
 
-        x = np.array(self.exchange_data['scan_time_marks']) - self.exchange_data['zero_time']
+        x = np.arange(1,self.exchange_data["iter_norm_number"]+1)
 
         for pmi, mi, pma, ma in zip(
                 self.draw_min_max_mroc_roi_plot.__dict__['posMin'], posMin,
@@ -1986,7 +1986,7 @@ class OpenNFTManager(QWidget):
             self.stop()
 
         self.leElapsedTime.setText('{:.4f}'.format(self.exchange_data["elapsed_time"]))
-        self.leCurrentVolume.setText('%d' % self.exchange_data["iter_norm_number"])
+        self.leCurrentVolume.setText('%d' % (self.exchange_data["iter_norm_number"]+1))
 
     # --------------------------------------------------------------------------
     def on_check_mosaic_view_updated(self):
