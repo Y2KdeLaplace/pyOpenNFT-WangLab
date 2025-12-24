@@ -1558,7 +1558,7 @@ class OpenNFTManager(QWidget):
             'projectname': self.exchange_data['ProjectName'],
             'subjectid': self.exchange_data['SubjectID'],
             'imageseriesno': self.exchange_data['ImgSerNr'],
-            'nfrunno': self.exchange_data['NFRunNr'],
+            'nfrunnr': self.exchange_data['NFRunNr'],
             '#': 1
         }
         template = self.exchange_data['FirstFileNameTxt']
@@ -1673,7 +1673,7 @@ class OpenNFTManager(QWidget):
             'projectname': self.exchange_data['ProjectName'],
             'subjectid': self.exchange_data['SubjectID'],
             'imageseriesno': self.exchange_data['ImgSerNr'],
-            'nfrunno': self.exchange_data['NFRunNr'],
+            'nfrunnr': self.exchange_data['NFRunNr'],
             '#': 1
         }
         template = self.exchange_data['FirstFileNameTxt']
