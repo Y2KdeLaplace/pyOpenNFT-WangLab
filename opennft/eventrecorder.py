@@ -29,18 +29,14 @@ class Times(enum.IntEnum):
     t4 = 4      # end of spatial-temporal data processing
     t5 = 5      # end of feedback computation
     t6 = 6      # begin of display instruction in Python Core process
-    t7 = 7      # begin of display instruction in Python PtbScreen class
-    t8 = 8      # begin of display feedback in Python PtbScreen class
-    t9 = 9      # end of display instruction in Matlab PTB Helper
-    t10 = 10    # end of display feedback in Matlab PTB Helper
 
     # optional timestamps
     # DCM special timestamps
-    t11 = 11    # first DCM model computation started
-    t12 = 12    # last DCM model computation is done
+    t7 = 7    # first DCM model computation started
+    t8 = 8    # last DCM model computation is done
 
     # Events durations
-    d0 = 13     # elapsed time per iteration
+    d0 = 9     # elapsed time per iteration
 
 
 # ==============================================================================

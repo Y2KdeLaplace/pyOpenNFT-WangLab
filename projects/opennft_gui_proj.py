@@ -1480,15 +1480,6 @@ class OpenNFTManager(QWidget):
 
             self.leShamFile.setText(self.settings.value('ShamFile', ''))
 
-            self.cbUsePTB.setChecked(str(self.settings.value('UsePTB', 'false')).lower() == 'true')
-            # if not config.USE_PTB_HELPER:
-            #     self.cbUsePTB.setChecked(False)
-            #     self.cbUsePTB.setEnabled(False)
-
-            self.cbScreenId.setCurrentIndex(int(self.settings.value('DisplayFeedbackScreenID', 0)))
-            self.cbDisplayFeedbackFullscreen.setChecked(
-                str(self.settings.value('DisplayFeedbackFullscreen')).lower() == 'true')
-
             self.cbUseUDPFeedback.setChecked(str(self.settings.value('UseUDPFeedback')).lower() == 'true')
             self.leUDPFeedbackIP.setText(self.settings.value('UDPFeedbackIP', ''))
             self.leUDPFeedbackPort.setText(str(self.settings.value('UDPFeedbackPort', '1234')))
@@ -1508,9 +1499,6 @@ class OpenNFTManager(QWidget):
                 self.cbType.setCurrentIndex(idx)
 
             # --- main viewer ---
-            self.sbTargANG.setValue(float(self.settings.value('TargANG', 0)))
-            self.sbTargRAD.setValue(float(self.settings.value('TargRAD', 0)))
-            self.sbTargDIAM.setValue(float(self.settings.value('TargDIAM', 0.0)))
             self.leWeightsFile.setText(str(self.settings.value('WeightsFileName', '')))
 
             self.actualize()
@@ -1653,7 +1641,6 @@ class OpenNFTManager(QWidget):
         if self.exchange_data['UseTCPData']:
             self.exchange_data['TCPDataIP'] = self.leTCPDataIP.text()
             self.exchange_data['TCPDataPort'] = int(self.leTCPDataPort.text())
-        self.exchange_data['DisplayFeedbackFullscreen'] = self.cbDisplayFeedbackFullscreen.isChecked()
 
         # --- bottom right ---
         self.exchange_data['DataType'] = str(self.cbDataType.currentText())
@@ -1760,10 +1747,6 @@ class OpenNFTManager(QWidget):
         self.settings.setValue('PlotFeedback', self.exchange_data['PlotFeedback'])
 
         self.settings.setValue('ShamFile', self.exchange_data['ShamFile'])
-
-        self.settings.setValue('UsePTB', self.cbUsePTB.isChecked())
-        self.settings.setValue('DisplayFeedbackScreenID', self.cbScreenId.currentIndex())
-        self.settings.setValue('DisplayFeedbackFullscreen', self.cbDisplayFeedbackFullscreen.isChecked())
 
         self.settings.setValue('UseUDPFeedback', self.cbUseUDPFeedback.isChecked())
         self.settings.setValue('UDPFeedbackIP', self.leUDPFeedbackIP.text())
