@@ -1532,7 +1532,7 @@ class OpenNFTManager(QWidget):
 
     # --------------------------------------------------------------------------
     def actualize_auto_rtqa(self):
-        logger.info("  Actualizing:")
+        logger.info("  Actualizing auto RTQA:")
 
         # --- top ---
         self.exchange_data['WatchFolder'] = self.leWatchFolder3.text()
@@ -1605,6 +1605,8 @@ class OpenNFTManager(QWidget):
         self.settings.setValue('MatrixSizeX', self.exchange_data['MatrixSizeX'])
         self.settings.setValue('MatrixSizeY', self.exchange_data['MatrixSizeY'])
         self.settings.setValue('OfflineMode', self.cbOfflineMode3.isChecked())
+
+        logger.info("  Actualizing finished.")
 
     # --------------------------------------------------------------------------
     # Synchronizing information from ini file and parameters tab
@@ -1783,6 +1785,8 @@ class OpenNFTManager(QWidget):
             self.udp_send_condition = self.cbUDPSendCondition.isChecked()
         else:
             self.udp_send_condition = False
+
+        logger.info("  Actualizing finished.")
 
     # --------------------------------------------------------------------------
     def on_roi_checked(self, action):

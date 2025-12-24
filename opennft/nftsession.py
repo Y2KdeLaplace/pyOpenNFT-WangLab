@@ -26,7 +26,7 @@ class NftSession:
         self.config = config
         self.reference_vol = MrVol()  # mc_template
         self.dim = (config.matrix_size_x, config.matrix_size_y, config.slices_nr)
-        self.vect_end_cond = np.ones((self.config.volumes_nr - self.config.skip_vol_nr, 1))
+        self.vect_end_cond = np.ones((self.config.volumes_nr - self.config.skip_vol_nr, 1), dtype=int)
         self.first_nf_inds = []
         self.pos_contrast = []
         self.neg_contrast = []
@@ -74,50 +74,84 @@ class NftSession:
 
             self.prot_names = []
             self.offsets = []
-            self.prot_cond = [None] * (cond_length + 1)
-            inc = 2
+
+            # 1. 提取所有条件名称
+            raw_cond_names = [c["ConditionName"] for c in conditions]
+
+            # 2. 判断基线类型 (Implicit vs Explicit)
+            # 检查BAS是否在条件名中，如果存在(Explicit)，索引偏移inc=0；如果不存在(Implicit)，偏移inc=1 (留给BAS)
+            has_explicit_bas = "BAS" in raw_cond_names
+            inc = 0 if has_explicit_bas else 1
+            self.prot_cond = [None] * (cond_length + inc)
+
+            # 3. 遍历并处理 JSON 中的条件
             for i in range(cond_length):
                 self.prot_names.append(conditions[i]["ConditionName"])
-
-                # TODO: check if baseline field already exists in protocol
                 offsets = np.array(conditions[i]["OnOffsets"])
 
-                for j in range(len(offsets)):
-                    self.vect_end_cond[offsets[j][0] - 1:offsets[j][1]] = inc
-                    if self.prot_cond[inc - 1] is None:
-                        self.prot_cond[inc - 1] = np.array(range(offsets[j][0], offsets[j][1] + 1))
-                    else:
-                        self.prot_cond[inc - 1] = np.vstack(
-                            (self.prot_cond[inc - 1], np.array(range(offsets[j][0], offsets[j][1] + 1))))
+                # 计算 Condition ID 
+                # (i: index; 1: condition shift; inc: BAS shift)
+                cond_id = i + 1 + inc
+                
+                # 处理时间点 (Offsets)
+                current_indices = []
+                for idx in offsets:
+                    # JSON 通常是 1-N [start, end] (MATLAB 风格)
+                    # Python切片: start = off[0]-1, end = off[1] (包含 start, 不包含 end)
+                    start = idx[0] - 1
+                    end = idx[1]
+
+                    self.vect_end_cond[start:end] = cond_id
+                    current_indices.append(np.arange(start, end, dtype=int) + 1)
+
+                # 存储该条件的所有索引
+                self.prot_cond[cond_id - 1] = current_indices
 
                 self.first_nf_inds.append(offsets[:, 0] - 1)
 
                 self.offsets.append(offsets)
 
-                inc = inc + 1
-
-            # Implicit baseline
-            bas_inds = np.where(self.vect_end_cond == 1)[0] + 1
-            bas_offsets = []
-            for i in range(len(self.offsets[0])):
-                if i == 0:
-                    inds = bas_inds[np.where(bas_inds < self.offsets[0][i][0])[0]]
+            # 4. 构建隐式基线索引 (如果需要)
+            if not has_explicit_bas:
+                bas_indices_flat = np.where(self.vect_end_cond == 1)[0] + 1
+                if len(bas_indices_flat) > 0:
+                    # 将不连续的索引切分为连续的 Block：
+                    # 计算索引之间的差值，差值不为1的地方就是断点
+                    split_indices = np.where(np.diff(bas_indices_flat) != 1)[0] + 1
+                    # 使用 np.split 切分数组
+                    self.prot_cond[0] = np.split(bas_indices_flat, split_indices)
                 else:
-                    inds = bas_inds[np.where(np.logical_and(bas_inds > self.offsets[0][i - 1][1],
-                                                            bas_inds < self.offsets[0][i][0]))[0]]
-
-                bas_offsets.append(inds)
-
-            inds = bas_inds[np.where(bas_inds > self.offsets[0][-1][1])[0]]
-            if len(inds) > 0:
-                bas_offsets.append(inds)
-            # bas_offsets = np.array(bas_offsets, ndmin=2)
-            self.prot_cond[0] = bas_offsets
-
-            # Contrast and Conditions For Contrast
+                    self.prot_cond[0] = []
+                
+            # 5. 解析 Contrast 逻辑
             if "ContrastActivation" in simulation_protocol:
-                splitted_contrast = simulation_protocol["ContrastActivation"].split("*")
-                self.pos_contrast = np.array(splitted_contrast[0::2], dtype=np.int32)
+                contrast_str = simulation_protocol["ContrastActivation"]
+                # 初始化对比度向量，长度对应 JSON 中的条件数量
+                contrast_vect = np.zeros(cond_length, dtype=int)
+
+                # 先按 ';' 分割不同的对比项
+                entries = contrast_str.split(';')
+                for entry in entries:
+                    parts = entry.split('*')
+                    if len(parts) == 2:
+                        weight = int(parts[0])
+                        name = parts[1].strip()
+
+                        # 通过名称查找对应的索引，确保映射正确
+                        if name in raw_cond_names:
+                            idx = raw_cond_names.index(name)
+                            contrast_vect[idx] = weight
+                        else:
+                            logger.warning(f"Contrast condition '{name}' not found in protocol.")
+                    else:
+                        logger.warning(f"Failed to parse contrast entry: {entry}")
+                        
+                # 转换为 (N, 1) 的列向量以适配 iGLM 计算
+                self.pos_contrast = contrast_vect.reshape(-1, 1)
+                self.neg_contrast = -self.pos_contrast
+            else:
+                # 默认对比度
+                self.pos_contrast = np.ones((cond_length, 1), dtype=int)
                 self.neg_contrast = -self.pos_contrast
 
         else:

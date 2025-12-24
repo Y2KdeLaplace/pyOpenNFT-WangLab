@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run OpenNFT GUI (Windows)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/projects/opennft_gui_proj.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": false
+        }
+    ]
+}
