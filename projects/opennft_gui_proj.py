@@ -1674,7 +1674,7 @@ class OpenNFTManager(QWidget):
             'subjectid': self.exchange_data['SubjectID'],
             'imageseriesno': self.exchange_data['ImgSerNr'],
             'nfrunnr': self.exchange_data['NFRunNr'],
-            '#': 1
+            '#': con.dicom_first_image_nr
         }
         template = self.exchange_data['FirstFileNameTxt']
         template_elements = re.findall(r"\{([A-Za-z0-9_: ]+)\}", template)

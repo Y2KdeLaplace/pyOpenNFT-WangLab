@@ -33,6 +33,7 @@ default_fd_thresholds: [0.1, 0.2, 0.5]  # FD thresholds to display by default
 # DVARS
 default_dvars_threshold: 5
 
+dicom_first_image_nr: 1
 dicom_siemens_xa30: False
 
 is_zero_padding: False
