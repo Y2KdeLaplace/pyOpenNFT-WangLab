@@ -21,7 +21,6 @@ class LegacyNftConfig(BaseModel):
     watch_dir: Path = Field(alias='WatchFolder')
     nf_run_nr: int = Field(alias='NFRunNr')
     image_ser_nr: int = Field(alias='ImgSerNr')
-    dicom_first_image_nr: Optional[int] = Field(alias='DicomFirstImageNr')
     first_file_name_txt: str = Field(alias='FirstFileNameTxt')
     first_file_name: str = Field(alias='FirstFileName')
     volumes_nr: int = Field(alias='NrOfVolumes')
