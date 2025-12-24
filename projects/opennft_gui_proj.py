@@ -1274,12 +1274,6 @@ class OpenNFTManager(QWidget):
         self.exchange_data["is_stopped"] = True
         self.exchange_data["vvf_run"] = False
 
-        if 'scan_time_marks' in self.exchange_data:
-            # 清空共享列表中的内容
-            del self.exchange_data['scan_time_marks'][:]
-        self.exchange_data['iter_norm_number'] = 0
-        self.exchange_data['zero_time'] = None
-
         if self._core_process is not None:
             if self._core_process.is_alive():
                 self.mosaic_timer.stop()
