@@ -455,8 +455,23 @@ class OpenNFTManager(QWidget):
         self.rtqa_input["is_auto_rtqa"] = con.auto_rtqa
         if not con.auto_rtqa:
             self.rtqa_input["roi_checked"] = self.selected_roi
-            self.rtqa_input["ind_bas"] = np.array([[t[n] for t in self.session.prot_cond[0]] for n in (0, -1)]).T
-            self.rtqa_input["ind_cond"] = np.array([[t[n] for t in self.session.prot_cond[1]] for n in (0, -1)]).T
+
+            # indexes of baseline and condition for CNR calculation
+            cond_idx = np.where([c=='NFBREG' for c in self.session.prot_names])[0]
+            tmpindexesCond = np.where(self.session.spm['xX_x'][:,cond_idx]>0.6)[0] # Index for Regulation block
+            tmpindexesBas = np.where(self.session.spm['xX_x'][:,cond_idx]<0.1)[0] # Index for Regulation block
+            if self.session.config.type == 'DCM':
+                # TODO: pyOpenNFT 没有移植DCM，我这里随意翻译了一下
+                tmpindexesBas = tmpindexesBas[0:-1]+1
+                tmpindexesCond = tmpindexesCond-1
+                indexesBas = []
+                indexesCond = []
+                for i in range(self.session.config.nrNFtrials-1):
+                    indexesBas.append(tmpindexesBas+i*(self.session.config.lengthDCMPeriod-self.session.config.dcmRemoveInterval))
+                    indexesCond.append(tmpindexesCond+i*(self.session.config.lengthDCMPeriod-self.session.config.dcmRemoveInterval))
+            else:
+                self.rtqa_input["ind_bas"] = tmpindexesBas[0:-1]+1
+                self.rtqa_input["ind_cond"] = tmpindexesCond-1
         else:
             self.rtqa_input["roi_checked"] = [0]
         self.rtqa_input["is_stopped"] = False
