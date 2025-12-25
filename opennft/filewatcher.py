@@ -52,15 +52,12 @@ class FileWatcher():
     # --------------------------------------------------------------------------
 
     def __next__(self) -> Path:
-        # TODO find all files_queue in old version!!!
-        filename = None
         try:
-            filename = self.files_queue.get_nowait()
+            filename = self.files_queue.get(block=True, timeout=0.1)
+            return Path(filename)
         except queue.Empty:
             return None
             # raise StopIteration
-
-        return Path(filename)
     # --------------------------------------------------------------------------
 
     def get_search_string(self, ext) -> str:
@@ -103,7 +100,7 @@ class FileWatcher():
         else:
             ext = ext[-1]
 
-        self.search_string = self.get_search_string(self, ext)
+        self.search_string = self.get_search_string(ext)
         
         if self.online:
             path = os.path.dirname(path)

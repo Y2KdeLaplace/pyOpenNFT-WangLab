@@ -272,11 +272,7 @@ class OpenNFTCoreProj(mp.Process):
             #     self.finalize_udp_sender()
 
             if not self.exchange_data['offline']:
-                while vol_filename is None:
-                    time.sleep(1)
-                    break
                 if vol_filename is None:
-                    logger.info('Waiting for a file...')
                     continue
             elif vol_filename is None:
                 break

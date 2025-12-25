@@ -69,25 +69,25 @@ class NftSession:
     def set_protocol(self, simulation_protocol):
 
         if not con.auto_rtqa:
-            conditions = simulation_protocol["ConditionIndex"]
-            cond_length = len(conditions)
+            cond_Idx = simulation_protocol["ConditionIndex"]
+            ncond = len(cond_Idx)
 
             self.prot_names = []
             self.offsets = []
 
             # 1. 提取所有条件名称
-            raw_cond_names = [c["ConditionName"] for c in conditions]
+            raw_cond_names = {cond['ConditionName']: idx for idx, cond in enumerate(cond_Idx)}
 
             # 2. 判断基线类型 (Implicit vs Explicit)
             # 检查BAS是否在条件名中，如果存在(Explicit)，索引偏移inc=0；如果不存在(Implicit)，偏移inc=1 (留给BAS)
-            has_explicit_bas = "BAS" in raw_cond_names
+            has_explicit_bas = "BAS" in raw_cond_names.keys()
             inc = 0 if has_explicit_bas else 1
-            self.prot_cond = [None] * (cond_length + inc)
+            self.prot_cond = [None] * (ncond + inc)
 
             # 3. 遍历并处理 JSON 中的条件
-            for i in range(cond_length):
-                self.prot_names.append(conditions[i]["ConditionName"])
-                offsets = np.array(conditions[i]["OnOffsets"])
+            for i in range(ncond):
+                self.prot_names.append(cond_Idx[i]["ConditionName"])
+                offsets = np.array(cond_Idx[i]["OnOffsets"])
 
                 # 计算 Condition ID 
                 # (i: index; 1: condition shift; inc: BAS shift)
@@ -125,33 +125,28 @@ class NftSession:
                 
             # 5. 解析 Contrast 逻辑
             if "ContrastActivation" in simulation_protocol:
-                contrast_str = simulation_protocol["ContrastActivation"]
-                # 初始化对比度向量，长度对应 JSON 中的条件数量
-                contrast_vect = np.zeros(cond_length, dtype=int)
+                contrast_vect = np.zeros(ncond, dtype=int)
+                contrast_str = []
 
-                # 先按 ';' 分割不同的对比项
-                entries = contrast_str.split(';')
+                entries = simulation_protocol["ContrastActivation"].split(';')
                 for entry in entries:
                     parts = entry.split('*')
                     if len(parts) == 2:
-                        weight = int(parts[0])
+                        weight = float(parts[0])
                         name = parts[1].strip()
 
-                        # 通过名称查找对应的索引，确保映射正确
-                        if name in raw_cond_names:
-                            idx = raw_cond_names.index(name)
-                            contrast_vect[idx] = weight
-                        else:
-                            logger.warning(f"Contrast condition '{name}' not found in protocol.")
+                        contrast_vect[raw_cond_names[name]] = weight
+                        contrast_str.append(name)
                     else:
                         logger.warning(f"Failed to parse contrast entry: {entry}")
                         
-                # 转换为 (N, 1) 的列向量以适配 iGLM 计算
-                self.pos_contrast = contrast_vect.reshape(-1, 1)
+                # 去除非contrast condition元素并转换为 (N, 1) 的列向量以适配 iGLM 计算
+                contrast_idx = [name in contrast_str for name in raw_cond_names]
+                self.pos_contrast = contrast_vect[contrast_idx].reshape(-1, 1)
                 self.neg_contrast = -self.pos_contrast
             else:
                 # 默认对比度
-                self.pos_contrast = np.ones((cond_length, 1), dtype=int)
+                self.pos_contrast = np.ones((ncond, 1), dtype=int)
                 self.neg_contrast = -self.pos_contrast
 
         else:
