@@ -260,11 +260,10 @@ class OpenNFTCoreProj(mp.Process):
         print("calc process started")
 
         # Waiting for files in MRI Watch Folder
-        fw = FileWatcher()
-        fw_path = Path(self.config.watch_dir)
-        fw.start_watching(not self.exchange_data['offline'], fw_path, self.config.first_file_name,
-                          self.config.first_file_name,
-                          file_ext="dcm", event_recorder=self.recorder)
+        fw = FileWatcher(not self.exchange_data['offline'], Path(self.config.watch_dir), 
+                         self.config.first_file_name, self.config.first_file_name_txt, 
+                         con, event_recorder=self.recorder)
+        fw.start_watching()
 
         for vol_filename in fw:
             # Main loop iteration

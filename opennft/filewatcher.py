@@ -30,15 +30,21 @@ class NewFileEventHandler(FileSystemEventHandler):
 
 
 class FileWatcher():
-    def __init__(self):
-        self.watch_folder = None
-        self.first_filename = None
-        self.files_queue = None
-        self.file_ext = None
-        self.first_filename_txt = None
+    def __init__(self, online, watch_folder, first_filename, first_filename_txt, 
+                       con, event_recorder=None):
+        self.online = online
+        self.watch_folder = watch_folder
+        self.first_filename = first_filename
+        self.first_filename_txt = first_filename_txt
+        self.delimiter = con.filename_delimiter
+        self.datatype = con.data_type
+        self.isNatureNum = con.filename_nature_num
+        self.recorder = event_recorder
+
+        self.TR_idx = -1
+        self.files_queue = queue.Queue()
         self.fs_observer = None
         self.search_string = None
-        self.online = None
     # --------------------------------------------------------------------------
 
     def __iter__(self):
@@ -57,50 +63,49 @@ class FileWatcher():
         return Path(filename)
     # --------------------------------------------------------------------------
 
-    def get_search_string(self, file_name_template, path, ext) -> str:
-        file_series_part = re.findall(r"\{#:(\d+)\}", file_name_template)
-        file_num_part = re.findall(r"_\d+_(\d+.\w+)", file_name_template)
-        if len(file_series_part) > 0:
-            file_series_len = int(file_series_part[0])
-            fname = os.path.splitext(os.path.basename(path))[0][:-file_series_len]
-            search_string = '%s*%s' % (fname, ext)
-        elif len(file_num_part) > 0:
-            fname = file_name_template.replace(file_num_part[0], "*")
-            search_string = '%s%s' % (fname, ext)
+    def get_search_string(self, ext) -> str:
+
+        # 1. 根据分隔符（默认为 '_'）分割文件名
+        tmpl_parts = self.first_filename_txt.split(self.delimiter)
+        parts = self.first_filename.split(self.delimiter)
+        
+        # 2.  寻找包含计数器占位符的位置 ('#')
+        for i, part in enumerate(tmpl_parts):
+            if '#' in part:
+                self.TR_idx = i 
+                break
+        
+        # 4. 生成 Glob 搜索字符串
+        if self.TR_idx == -1:
+            # 接受任意文件名
+            search_string = '*' + ext
         else:
-            search_string = '*%s' % ext
+            # 如果该段包含扩展名,我们需要保留扩展名，只把前面的部分变成 *
+            if parts[self.TR_idx].endswith(ext):
+                parts[self.TR_idx] = '*' + ext
+            else:
+                # 简单粗暴地将该段替换为 * (通配符)
+                # 这样就能匹配该位置的任何变化
+                parts[self.TR_idx] = '*'
+            
+            search_string = self.delimiter.join(parts)
 
         return search_string
     # --------------------------------------------------------------------------
 
-    def start_watching(self, online, watch_folder, first_filename, first_filename_txt, file_ext=None,
-                       event_recorder=None):
-        self.watch_folder = watch_folder
-        self.first_filename = first_filename
-        self.files_queue = queue.Queue()
-        self.recorder = event_recorder
-        self.online = online
+    def start_watching(self):
 
-        # path = os.path.join(self.P['WatchFolder'], self.P['FirstFileName'])
-        path = os.path.join(watch_folder, first_filename)
+        path = os.path.join(self.watch_folder, self.first_filename)
 
         ext = re.findall(r"\.\w*$", str(path))
         if not ext:
-            ext = file_ext
-            # TODO move it to the call
-            # if self.P['DataType'] == 'IMAPH':
-            #     ext = config.IMAPH_FILES_EXTENSION
-            # else:  # dicom as default
-            #    ext = config.DICOM_FILES_EXTENSION
+            ext = self.datatype
         else:
             ext = ext[-1]
 
-        self.file_ext = ext
-        self.first_filename_txt = first_filename_txt
-        # self.searchString = self.getFileSearchString(self.P['FirstFileNameTxt'], path, ext)
-        self.search_string = self.get_search_string(first_filename_txt, path, ext)
+        self.search_string = self.get_search_string(self, ext)
         
-        if online:
+        if self.online:
             path = os.path.dirname(path)
             logger.info('Online watching for {} in {}', self.search_string, path)
             event_handler = NewFileEventHandler(self.search_string, self.files_queue, self.recorder)
@@ -111,7 +116,10 @@ class FileWatcher():
         else:       
             path = os.path.join(os.path.dirname(path), self.search_string)
             logger.info(f"Offline searching for {path}")
-            files = sorted(glob.glob(path))
+            if self.isNatureNum:
+                files = sorted(glob.glob(path), key = lambda s: int(s.split(self.delimiter)[self.TR_idx]))
+            else:
+                files = sorted(glob.glob(path))
         
             if not files:
                 logger.info("No files found in offline mode. Check WatchFolder settings!")

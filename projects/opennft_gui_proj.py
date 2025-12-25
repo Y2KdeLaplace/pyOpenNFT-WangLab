@@ -1,8 +1,6 @@
 import enum
-import re
 import time
 import sys
-import requests
 from pathlib import Path
 
 import numpy as np
@@ -1450,8 +1448,8 @@ class OpenNFTManager(QWidget):
             # --- middle ---
             self.leProjName.setText(self.settings.value('ProjectName', ''))
             self.leSubjectID.setText(self.settings.value('SubjectID', ''))
-            self.leFirstFile.setText(self.settings.value('FirstFileNameTxt', '001_{Image Series No:06}_{#:06}.dcm'))
-            self.leFirstFile2.setText(self.settings.value('FirstFileNameTxt', '001_{Image Series No:06}_{#:06}.dcm'))
+            self.leFirstFile.setText(self.settings.value('FirstFileNameTxt', ''))
+            self.leFirstFile2.setText(self.settings.value('FirstFileNameTxt', ''))
             self.sbNFRunNr.setValue(int(self.settings.value('NFRunNr', '1')))
             self.sbImgSerNr.setValue(int(self.settings.value('ImgSerNr', '1')))
             self.sbVolumesNr.setValue(int(self.settings.value('NrOfVolumes')))
@@ -1501,7 +1499,9 @@ class OpenNFTManager(QWidget):
             # --- main viewer ---
             self.leWeightsFile.setText(str(self.settings.value('WeightsFileName', '')))
 
-            self.actualize()
+            self.leFirstFilePath.setText("Press 'Setup' to preview path")
+            self.lbFilePathStatus.setText("Status pending...")
+            self.leCurrentVolume.setText("-")
 
         else:
 
@@ -1514,7 +1514,7 @@ class OpenNFTManager(QWidget):
 
             self.leProjName.setText(self.settings.value('ProjectName', ''))
             self.leSubjectID.setText(self.settings.value('SubjectID', ''))
-            self.leFirstFile3.setText(self.settings.value('FirstFileNameTxt', '001_{Image Series No:06}_{#:06}.dcm'))
+            self.leFirstFile3.setText(self.settings.value('FirstFileNameTxt', ''))
             self.sbNFRunNr3.setValue(int(self.settings.value('NFRunNr', '1')))
             self.sbImgSerNr3.setValue(int(self.settings.value('ImgSerNr', '1')))
             self.sbVolumesNr3.setValue(int(self.settings.value('NrOfVolumes')))
@@ -1525,7 +1525,9 @@ class OpenNFTManager(QWidget):
 
             self.cbOfflineMode3.setChecked(str(self.settings.value('OfflineMode', 'true')).lower() == 'true')
 
-            self.actualize_auto_rtqa()
+            self.leFirstFilePath.setText("Press 'Setup' to preview path")
+            self.lbFilePathStatus.setText("Status pending...")
+            self.leCurrentVolume.setText("-")
 
     # --------------------------------------------------------------------------
     def actualize_auto_rtqa(self):
@@ -1553,23 +1555,19 @@ class OpenNFTManager(QWidget):
         self.exchange_data['NrOfVolumes'] = self.sbVolumesNr3.value()
         self.exchange_data['nrSkipVol'] = self.sbSkipVol3.value()
 
+        # sanity check
+        if sum(['#' in nx for nx in self.exchange_data['FirstFileNameTxt'].split(con.filename_delimiter)])>1:
+            raise ValueError("FirstFileNameTxt中的计数符 '#' 数量不能超过 1")
+
         # Parsing FirstFileNameTxt template and replace it with variables ---
         fields = {
-            'projectname': self.exchange_data['ProjectName'],
-            'subjectid': self.exchange_data['SubjectID'],
-            'imageseriesno': self.exchange_data['ImgSerNr'],
-            'nfrunnr': self.exchange_data['NFRunNr'],
-            '#': 1
+            'ProjectName': self.exchange_data['ProjectName'],
+            'SubjectID': self.exchange_data['SubjectID'],
+            'ImgSerNr': self.exchange_data['ImgSerNr'],
+            'NFRunNr': self.exchange_data['NFRunNr'],
+            '#': con.dicom_first_image_nr
         }
-        template = self.exchange_data['FirstFileNameTxt']
-        template_elements = re.findall(r"\{([A-Za-z0-9_: ]+)\}", template)
-
-        self.exchange_data['FirstFileName'] = self.exchange_data['FirstFileNameTxt']
-
-        for template_element in template_elements:
-            template = template.replace("{%s}" % template_element, "{%s}" % template_element.replace(" ", "").lower())
-
-        self.exchange_data['FirstFileName'] = template.format(**fields)
+        self.exchange_data['FirstFileName'] = self.exchange_data['FirstFileNameTxt'].format(**fields)
 
         self.exchange_data['DataType'] = "DICOM"
         self.exchange_data['useEPITemplate'] = con.use_epi_template
@@ -1578,7 +1576,7 @@ class OpenNFTManager(QWidget):
         self.exchange_data['isIGLM'] = con.use_iglm
         self.exchange_data['isDicomSiemensXA30'] = con.dicom_siemens_xa30
         self.exchange_data['UseTCPData'] = False
-        self.exchange_data['TR'] = 1500
+        self.exchange_data['TR'] = 2000
         # config.USE_UDP_FEEDBACK = False
         self.exchange_data['getMAT'] = False
 
@@ -1668,23 +1666,19 @@ class OpenNFTManager(QWidget):
         # --- main viewer ---
         self.exchange_data['WeightsFileName'] = self.leWeightsFile.text()
 
+        # sanity check
+        if sum(['#' in nx for nx in self.exchange_data['FirstFileNameTxt'].split(con.filename_delimiter)])>1:
+            raise ValueError("FirstFileNameTxt中的计数符 '#' 数量不能超过 1")
+
         # Parsing FirstFileNameTxt template and replace it with variables ---
         fields = {
-            'projectname': self.exchange_data['ProjectName'],
-            'subjectid': self.exchange_data['SubjectID'],
-            'imageseriesno': self.exchange_data['ImgSerNr'],
-            'nfrunnr': self.exchange_data['NFRunNr'],
+            'ProjectName': self.exchange_data['ProjectName'],
+            'SubjectID': self.exchange_data['SubjectID'],
+            'ImgSerNr': self.exchange_data['ImgSerNr'],
+            'NFRunNr': self.exchange_data['NFRunNr'],
             '#': con.dicom_first_image_nr
         }
-        template = self.exchange_data['FirstFileNameTxt']
-        template_elements = re.findall(r"\{([A-Za-z0-9_: ]+)\}", template)
-
-        self.exchange_data['FirstFileName'] = self.exchange_data['FirstFileNameTxt']
-
-        for template_element in template_elements:
-            template = template.replace("{%s}" % template_element, "{%s}" % template_element.replace(" ", "").lower())
-
-        self.exchange_data['FirstFileName'] = template.format(**fields)
+        self.exchange_data['FirstFileName'] = self.exchange_data['FirstFileNameTxt'].format(**fields)
 
         # Update GUI information
         self.leCurrentVolume.setText('%d' % self.exchange_data["iter_norm_number"])
@@ -1695,7 +1689,7 @@ class OpenNFTManager(QWidget):
             filePathStatus += "MRI Watch Folder exists. "
         else:
             filePathStatus += "MRI Watch Folder does not exists. "
-        if Path(self.leFirstFilePath.text()).is_file():
+        if list(Path(self.exchange_data['WatchFolder']).glob(self.exchange_data['FirstFileName'])):
             filePathStatus += "First file exists. "
         else:
             filePathStatus += "First file does not exist. "
