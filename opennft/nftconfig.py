@@ -18,6 +18,8 @@ class LegacyNftConfig(BaseModel):
 
     project_name: str = Field(alias='ProjectName')
     subject_id: str = Field(alias='SubjectID')
+    type: str = Field(alias='Type')
+    prot: Optional[str] = Field(alias='Prot')
     watch_dir: Path = Field(alias='WatchFolder')
     nf_run_nr: int = Field(alias='NFRunNr')
     image_ser_nr: int = Field(alias='ImgSerNr')
@@ -40,26 +42,27 @@ class LegacyNftConfig(BaseModel):
     mc_template_file: Path = Field(alias='MCTempl')
     struct_bg_file: Optional[Path] = Field(alias='StructBgFile')
     task_dir: Optional[Path] = Field(alias='TaskFolder')
-    prot: Optional[str] = Field(alias='Prot')
+    sham_file: Optional[Path] = Field(alias='ShamFile')
+
     offline_mode: bool = Field(alias='OfflineMode')
     use_tcp_data: Optional[bool] = Field(alias='UseTCPData')
     tcp_data_address: Optional[IPv4Address] = Field(alias='TCPDataIP')
     tcp_data_port: Optional[int] = Field(alias='TCPDataPort')
-    type: str = Field(alias='Type')
-    max_feedback_val: Optional[int] = Field(alias='MaxFeedbackVal')
-    feedback_val_dec: Optional[int] = Field(alias='FeedbackValDec')
-    neg_feedback: Optional[bool] = Field(alias='NegFeedback')
-    plot_feedback: Optional[bool] = Field(alias='PlotFeedback')
+
     use_udp_feedback: bool = Field(False, alias='UseUDPFeedback')
     udp_feedback_address: Optional[IPv4Address] = Field(alias='UDPFeedbackIP')
     udp_feedback_port: Optional[int] = Field(alias='UDPFeedbackPort')
     udp_feedback_control_char: Optional[str] = Field(alias='UDPFeedbackControlChar')
     udp_send_condition: Optional[bool] = Field(alias='UDPSendCondition')
-    min_feedback_val: Optional[int] = Field(alias='MinFeedbackVal')
-    sham_file: Optional[Path] = Field(alias='ShamFile')
+    
     rest_api_request: Optional[str] = Field(alias='PredictionRESTReq')
     rest_time_interval: Optional[float] = Field(alias='PredictionRESTTimeInterval')
 
+    max_feedback_val: Optional[int] = Field(alias='MaxFeedbackVal')
+    min_feedback_val: Optional[int] = Field(alias='MinFeedbackVal')
+    feedback_val_dec: Optional[int] = Field(alias='FeedbackValDec')
+    neg_feedback: Optional[bool] = Field(alias='NegFeedback')
+    plot_feedback: Optional[bool] = Field(alias='PlotFeedback')
 
 FilePathLike = Union[str, Path]
 
