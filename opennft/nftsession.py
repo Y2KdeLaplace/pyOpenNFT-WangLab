@@ -102,7 +102,7 @@ class NftSession:
                     end = idx[1]
 
                     self.vect_end_cond[start:end] = cond_id
-                    current_indices.append(np.arange(start, end, dtype=int) + 1)
+                    current_indices.append(np.arange(start, end, dtype=int))
 
                 # 存储该条件的所有索引
                 self.prot_cond[cond_id - 1] = current_indices
@@ -113,7 +113,7 @@ class NftSession:
 
             # 4. 构建隐式基线索引 (如果需要)
             if not has_explicit_bas:
-                bas_indices_flat = np.where(self.vect_end_cond == 1)[0] + 1
+                bas_indices_flat = np.where(self.vect_end_cond == 1)[0]
                 if len(bas_indices_flat) > 0:
                     # 将不连续的索引切分为连续的 Block：
                     # 计算索引之间的差值，差值不为1的地方就是断点
@@ -321,11 +321,11 @@ class NftIteration:
         self.mr_time_series.acquiring(self.session.config.type, self.mr_vol, self.session.rois)
 
         if not con.auto_rtqa:
-            sl_wind = (self.session.offsets[0][0][0] - 1) * self.nr_blocks_in_sliding_window
-            bas_block_length = self.session.offsets[0][0][0] - 1
+            bas_block_length = self.session.prot_cond[0][0].size
+            sl_wind = bas_block_length * self.nr_blocks_in_sliding_window
         else:
-            sl_wind = self.session.nr_vols
             bas_block_length = 0
+            sl_wind = self.session.nr_vols
         is_svm = self.session.config.type == 'SVM'
 
         self.mr_time_series.preprocessing(self.iter_norm_number, self.bas_func, self.lin_regr, sl_wind,

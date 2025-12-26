@@ -653,7 +653,7 @@ class OpenNFTManager(QWidget):
 
         if not ('BAS' in self.session.prot_names):  # implicit baseline
             # self.P['ProtCond'][0] - 0 is for Baseline indexes
-            tmpCond.insert(0, np.array([[t[n] for t in self.session.prot_cond[0]] for n in (0, -1)]).T)
+            tmpCond.insert(0, np.array([[t[n]+1 for t in self.session.prot_cond[0]] for n in (0, -1)]).T)
             nrCond.insert(0, tmpCond[0].shape[0])
 
         c = 1

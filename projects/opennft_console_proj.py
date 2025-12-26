@@ -42,8 +42,10 @@ class OpenNFTCoreProj(mp.Process):
             self.udp_sender = socket.socket(
                 family=socket.AF_INET, type=socket.SOCK_DGRAM
             )
-        self.udp_ip = str(self.config.udp_feedback_address)
-        self.udp_port = self.config.udp_feedback_port
+            self.udp_ip = str(self.config.udp_feedback_address)
+            self.udp_port = self.config.udp_feedback_port
+        else:
+            self.udp_sender = None
 
         if self.exchange_data["offline"] is None:
             self.exchange_data['offline'] = self.config.offline_mode
@@ -267,9 +269,6 @@ class OpenNFTCoreProj(mp.Process):
 
         for vol_filename in fw:
             # Main loop iteration
-
-            # if self.exchange_data['close_udp']:
-            #     self.finalize_udp_sender()
 
             if not self.exchange_data['offline']:
                 if vol_filename is None:
